@@ -109,6 +109,63 @@
       </div>
     </div>
   </form>
+
+  <!-- Tunnel après simulation : dimensionnement indicatif, pré-devis, photos avant chantier (piloté par simulateur.js) -->
+  <form class="sim" id="dimensionnement" novalidate hidden aria-labelledby="dim-titre-form">
+    <div class="sim-haut">
+      <p class="sr-only" id="dim-titre-form">Questionnaire de dimensionnement de votre pompe à chaleur</p>
+      <div class="sim-progression-texte"><span id="dim-prog-texte" aria-live="polite">Question 1</span><span>Dimensionnement indicatif</span></div>
+      <div class="sim-barre" id="dim-progression" role="progressbar" aria-label="Progression du dimensionnement" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><span id="dim-barre"></span></div>
+    </div>
+    <div class="sim-corps">
+      <section class="etape-sim" data-detape="annee">
+<fieldset><legend>En quelle année votre maison a-t-elle été construite ?</legend><p class="sous">Une tranche approximative suffit : elle donne le niveau d'isolation d'origine.</p><div class="choix choix-2"><input type="radio" name="dAnnee" id="d-an-1" value="avant-1975"><label for="d-an-1"><span class="rond" aria-hidden="true"></span><span>Avant 1975</span></label><input type="radio" name="dAnnee" id="d-an-2" value="1975-1989"><label for="d-an-2"><span class="rond" aria-hidden="true"></span><span>1975 à 1989</span></label><input type="radio" name="dAnnee" id="d-an-3" value="1990-2005"><label for="d-an-3"><span class="rond" aria-hidden="true"></span><span>1990 à 2005</span></label><input type="radio" name="dAnnee" id="d-an-4" value="2006-2012"><label for="d-an-4"><span class="rond" aria-hidden="true"></span><span>2006 à 2012</span></label><input type="radio" name="dAnnee" id="d-an-5" value="apres-2012"><label for="d-an-5"><span class="rond" aria-hidden="true"></span><span>Après 2012</span></label></div><p class="erreur erreur-etape" role="alert"></p></fieldset>
+</section><section class="etape-sim" data-detape="isolation" hidden>
+<fieldset><legend>Quels travaux d'isolation ont déjà été faits ?</legend><p class="sous">Plusieurs réponses possibles.</p><div class="choix choix-2 choix-cases"><input type="checkbox" name="dIsolation" id="d-iso-combles" value="combles"><label for="d-iso-combles"><span class="rond carre" aria-hidden="true"></span><span>Combles ou toiture</span></label><input type="checkbox" name="dIsolation" id="d-iso-murs" value="murs"><label for="d-iso-murs"><span class="rond carre" aria-hidden="true"></span><span>Murs<small>Par l'intérieur ou l'extérieur</small></span></label><input type="checkbox" name="dIsolation" id="d-iso-fenetres" value="fenetres"><label for="d-iso-fenetres"><span class="rond carre" aria-hidden="true"></span><span>Fenêtres double vitrage</span></label><input type="checkbox" name="dIsolation" id="d-iso-aucun" value="aucun"><label for="d-iso-aucun"><span class="rond carre" aria-hidden="true"></span><span>Aucun de ces travaux</span></label></div><p class="erreur erreur-etape" role="alert"></p></fieldset>
+</section><section class="etape-sim" data-detape="volume" hidden>
+<fieldset><legend>Surface chauffée et hauteur sous plafond</legend><p class="sous">Nous avons repris la surface indiquée dans le simulateur : corrigez-la si besoin.</p><div class="champ"><label for="d-surface">Surface chauffée en m²</label><input type="number" id="d-surface" name="dSurface" inputmode="numeric" min="15" max="1000" aria-describedby="d-surface-erreur"><p class="erreur" id="d-surface-erreur"></p></div>
+<fieldset class="champ"><legend class="etiquette" style="font-family:inherit;font-size:1rem;color:inherit;font-weight:600;margin-bottom:6px">Hauteur sous plafond</legend><div class="choix choix-3"><input type="radio" name="dHauteur" id="d-h-25" value="2.5" checked><label for="d-h-25"><span class="rond" aria-hidden="true"></span><span>2,50 m<small>Le plus courant</small></span></label><input type="radio" name="dHauteur" id="d-h-27" value="2.7"><label for="d-h-27"><span class="rond" aria-hidden="true"></span><span>2,70 m</span></label><input type="radio" name="dHauteur" id="d-h-3" value="3"><label for="d-h-3"><span class="rond" aria-hidden="true"></span><span>3 m ou plus</span></label></div></fieldset>
+<p class="erreur erreur-etape" role="alert"></p></fieldset>
+</section><section class="etape-sim" data-detape="niveaux" hidden>
+<fieldset><legend>Sur combien de niveaux la maison est-elle chauffée ?</legend><div class="choix"><input type="radio" name="dNiveaux" id="d-niv-1" value="1"><label for="d-niv-1"><span class="rond" aria-hidden="true"></span><span>Plain-pied<small>Un seul niveau chauffé</small></span></label><input type="radio" name="dNiveaux" id="d-niv-2" value="2"><label for="d-niv-2"><span class="rond" aria-hidden="true"></span><span>2 niveaux<small>Rez-de-chaussée + étage</small></span></label><input type="radio" name="dNiveaux" id="d-niv-3" value="3+"><label for="d-niv-3"><span class="rond" aria-hidden="true"></span><span>3 niveaux ou plus</span></label></div><p class="erreur erreur-etape" role="alert"></p></fieldset>
+</section><section class="etape-sim" data-detape="emetteurs" hidden>
+<fieldset><legend>Quels émetteurs de chaleur avez-vous ?</legend><p class="sous">Ce sont les équipements qui diffusent la chaleur dans les pièces.</p><div class="choix choix-2"><input type="radio" name="dEmetteurs" id="d-em-fonte" value="fonte"><label for="d-em-fonte"><span class="rond" aria-hidden="true"></span><span>Radiateurs en fonte<small>Lourds, souvent anciens</small></span></label><input type="radio" name="dEmetteurs" id="d-em-acier" value="acier-alu"><label for="d-em-acier"><span class="rond" aria-hidden="true"></span><span>Radiateurs acier ou alu<small>Panneaux plus fins</small></span></label><input type="radio" name="dEmetteurs" id="d-em-plancher" value="plancher"><label for="d-em-plancher"><span class="rond" aria-hidden="true"></span><span>Plancher chauffant à eau</span></label><input type="radio" name="dEmetteurs" id="d-em-mixte" value="mixte"><label for="d-em-mixte"><span class="rond" aria-hidden="true"></span><span>Mixte<small>Radiateurs + plancher chauffant</small></span></label></div><p class="erreur erreur-etape" role="alert"></p></fieldset>
+</section><section class="etape-sim" data-detape="ecs" hidden>
+<fieldset><legend>La pompe à chaleur doit-elle aussi produire l'eau chaude ?</legend><p class="sous" id="d-ecs-sous">Douche, bain, évier : la PAC peut chauffer un ballon d'eau chaude sanitaire.</p><div class="choix choix-2"><input type="radio" name="dEcs" id="d-ecs-oui" value="oui"><label for="d-ecs-oui"><span class="rond" aria-hidden="true"></span><span>Oui<small>Chauffage + eau chaude</small></span></label><input type="radio" name="dEcs" id="d-ecs-non" value="non"><label for="d-ecs-non"><span class="rond" aria-hidden="true"></span><span>Non<small>Chauffage seulement</small></span></label></div><p class="erreur erreur-etape" role="alert"></p></fieldset>
+</section><section class="etape-sim" data-detape="altitude" hidden>
+<fieldset><legend>À quelle altitude approximative se trouve la maison ?</legend><p class="sous">Plus on monte, plus il fait froid l'hiver. En plaine ou en ville, choisissez « moins de 200 m ».</p><div class="choix choix-2"><input type="radio" name="dAltitude" id="d-alt-1" value="moins-200"><label for="d-alt-1"><span class="rond" aria-hidden="true"></span><span>Moins de 200 m</span></label><input type="radio" name="dAltitude" id="d-alt-2" value="200-400"><label for="d-alt-2"><span class="rond" aria-hidden="true"></span><span>200 à 400 m</span></label><input type="radio" name="dAltitude" id="d-alt-3" value="400-800"><label for="d-alt-3"><span class="rond" aria-hidden="true"></span><span>400 à 800 m</span></label><input type="radio" name="dAltitude" id="d-alt-4" value="plus-800"><label for="d-alt-4"><span class="rond" aria-hidden="true"></span><span>Plus de 800 m</span></label></div><p class="erreur erreur-etape" role="alert"></p></fieldset>
+</section><section class="etape-sim" data-detape="compteur" hidden>
+<fieldset><legend>Quel est votre compteur électrique ?</legend><p class="sous">Indiqué sur votre facture d'électricité (« monophasé » ou « triphasé »).</p><div class="choix"><input type="radio" name="dCompteur" id="d-cpt-mono" value="mono"><label for="d-cpt-mono"><span class="rond" aria-hidden="true"></span><span>Monophasé<small>Le cas le plus fréquent</small></span></label><input type="radio" name="dCompteur" id="d-cpt-tri" value="tri"><label for="d-cpt-tri"><span class="rond" aria-hidden="true"></span><span>Triphasé</span></label><input type="radio" name="dCompteur" id="d-cpt-nsp" value="nsp"><label for="d-cpt-nsp"><span class="rond" aria-hidden="true"></span><span>Je ne sais pas</span></label></div><p class="erreur erreur-etape" role="alert"></p></fieldset>
+</section>
+      <section class="etape-sim" data-detape="note" hidden data-bouton="Continuer : mes photos"><div id="dim-note"></div></section>
+      <section class="etape-sim" data-detape="photos" hidden>
+        <h2>Photos avant chantier</h2>
+        <p class="sous">Quelques photos permettent à notre technicien de valider la note sans attendre la visite. Elles sont réduites automatiquement avant l'envoi. <span id="ph-compteur">0 photo sur 8 maximum</span>.</p>
+        <ol class="photo-liste" id="ph-liste"></ol>
+        <p class="erreur" id="ph-erreur" role="alert"></p>
+        <div class="envoi-progression" id="ph-progression" hidden>
+          <p class="mb-0" id="ph-prog-texte" aria-live="polite">Envoi en cours…</p>
+          <div class="sim-barre" role="progressbar" aria-label="Envoi des photos" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="ph-barre-zone"><span id="ph-barre"></span></div>
+        </div>
+        <div id="ph-erreur-envoi" class="alerte alerte-erreur" role="alert" tabindex="-1" hidden></div>
+        <div class="actions actions-photos">
+          <button type="button" class="btn btn-principal" id="ph-envoyer" disabled>Envoyer mes photos</button>
+          <button type="button" class="btn btn-contour" id="ph-plus-tard">Je les enverrai plus tard</button>
+        </div>
+      </section>
+      <section class="etape-sim" data-detape="fin" hidden>
+        <h2 tabindex="-1" id="dim-fin-titre">Merci, votre dossier est complet.</h2>
+        <p>Un technicien valide votre note sous <strong>48 h ouvrées</strong> et vous recevez votre devis définitif par e-mail.</p>
+        <p class="sous" id="dim-fin-photos"></p>
+        <div class="actions mt-2"><a class="btn btn-vert" href="tel:+33972149162"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8 9.9a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.8.7a2 2 0 0 1 1.7 2z"/></svg>Appeler le 09 72 14 91 62</a></div>
+      </section>
+      <div id="dim-erreur-envoi" class="alerte alerte-erreur" role="alert" tabindex="-1" hidden></div>
+      <div class="sim-nav" id="dim-nav">
+        <button type="button" class="sim-retour" id="dim-retour"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg>Retour</button>
+        <button type="submit" class="btn btn-principal" id="dim-suivant">Continuer</button>
+      </div>
+    </div>
+  </form>
   <div class="recap-confiance">
     <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg>RGE Qualipac n° QPAC/77678</span>
     <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h5"/></svg>Mandataire MaPrimeRénov'</span>
