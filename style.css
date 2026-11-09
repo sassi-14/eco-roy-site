@@ -100,7 +100,7 @@ strong { font-weight: 650; }
 .section-verte h2, .section-verte h3 { color: #fff; }
 .section-verte a { color: #ffe1b0; }
 .surtitre { display: inline-block; font-size: .8rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--terre); margin-bottom: 12px; }
-.section-verte .surtitre { color: var(--miel); }
+.section-verte .surtitre { color: #f0b55a; }
 .chapo { font-size: 1.15rem; color: var(--encre-2); max-width: 62ch; }
 .section-verte .chapo { color: #cfe2d3; }
 
@@ -244,7 +244,8 @@ input[aria-invalid="true"], select[aria-invalid="true"] { border-color: #b42318;
 .ligne-2 { display: grid; gap: 0 14px; }
 @media (min-width: 560px) { .ligne-2 { grid-template-columns: 1fr 1fr; } }
 fieldset { border: 0; margin: 0; padding: 0; min-width: 0; }
-.desactive { opacity: .6; }
+.desactive { background: #f3efe6; }
+.desactive input, .desactive .btn { opacity: .55; }
 
 /* ---------- Simulateur ---------- */
 .sim-zone { padding: 20px 0 64px; }
@@ -374,3 +375,14 @@ a.carte h3 { color: var(--vert); }
 .actions-photos { margin-top: 20px; }
 .actions-photos .btn { width: 100%; }
 @media (min-width: 560px) { .actions-photos .btn { width: auto; } }
+.pied-legal a, .prose a, .mention a { text-decoration: underline; text-underline-offset: 2px; }
+@media (min-width: 960px) {
+  .nav a, .nav .btn { white-space: nowrap; }
+  .nav a { padding: 8px 9px; }
+}
+@media (min-width: 960px) and (max-width: 1199px) { .entete-tel { display: none; } }
+@media (min-width: 960px) and (max-width: 1149px) {
+  .nav a { padding: 8px 6px; font-size: .88rem; }
+  .nav a.btn { padding: 8px 12px; font-size: .88rem; }
+  .logo small { display: none; }
+}

@@ -13,7 +13,7 @@
   var CONFIG = {
     // Prime CEE « Coup de pouce chauffage » pour une PAC air/eau, versée via notre délégataire
     // et déduite directement du devis (€, par profil MaPrimeRénov').
-    cee: { bleu: 5800, jaune: 4000, violet: 4200, rose: 4200 },
+    cee: { bleu: 5800, jaune: 4000, violet: 4000, rose: 4000 }, ceeBleuSansMPR: 7500, // montants affichés au client (part CEE pure, hors commission). 4600 possible selon machine : on affiche le bas.
     // Le Coup de pouce vise le remplacement d'une chaudière fossile : pour les autres chauffages,
     // le montant reste affiché mais signalé « à confirmer ».
     ceeChauffagesCoupDePouce: ["Chaudière gaz", "Chaudière fioul"],
@@ -404,6 +404,8 @@
           nom: document.getElementById("f-nom").value.trim(),
           prenom: document.getElementById("f-prenom").value.trim(),
           email: document.getElementById("f-email").value.trim(),
+          adresse: document.getElementById("f-adresse").value.trim(),
+          ville: document.getElementById("f-ville").value.trim(),
           token: (reponse && typeof reponse.token === "string") ? reponse.token : "",
           formSimulateur: form
         };
@@ -535,6 +537,7 @@
    */
   function calculAides(couleur, prixTTC, mprMontant, chauffage) {
     var cee = couleur ? (CONFIG.cee[couleur] || 0) : 0;
+    if (couleur === "bleu" && !(mprMontant > 0) && CONFIG.ceeBleuSansMPR) cee = CONFIG.ceeBleuSansMPR; // bleu sans MaPrimeRénov' : prime CEE majorée
     var mprBrut = couleur ? Math.max(0, mprMontant || 0) : 0;
     var mpr = mprBrut, ecrete = false;
     if (couleur && CONFIG.ecretement && CONFIG.ecretement[couleur] != null) {
@@ -568,6 +571,12 @@
         : 'Reste à charge final après versement de MaPrimeRénov\'') + '</dt><dd>' + euros(a.racFinal) + '</dd></div>';
     }
     h += '</dl>';
+    if (a.connu && a.racFinal > 0) {
+      h += '<div class="encadre encadre-vert mt-2"><p class="mb-0"><strong>Vous ne voulez pas payer ce reste à charge ? Une solution s\'offre à vous.</strong><br>' +
+        'Devenez <strong>Partenaire Vitrine Eco Roy</strong> : vous accueillez notre panneau devant votre maison pendant les travaux et quelques mois après, et vous partagez votre témoignage avec photos avant/après sur notre site. ' +
+        'En échange, Eco Roy peut prendre en charge tout ou partie de votre reste à charge.</p>' +
+        '<p class="mention mb-0">Offre sous conditions et en nombre limité. La remise est indiquée sur votre devis. Votre conseiller vous la présente lors de son appel.</p></div>';
+    }
     if (!a.connu) h += '<p class="mention mt-2 mb-0">Sans votre profil MaPrimeRénov\', les aides (prime CEE et MaPrimeRénov\') seront calculées par votre conseiller et déduites de ce prix.</p>';
     h += '<p class="mention mt-2 mb-0">Estimation indicative, ' + reserve + '.</p></div>';
     return h;
@@ -703,12 +712,28 @@
 
   function attendre(ms) { return new Promise(function (ok) { setTimeout(ok, ms); }); }
 
+  /** Altitude (m) de la maison : géocodage BAN puis altimétrie IGN. Résout null en cas d'échec (on garde « moins de 200 m »). */
+  function trouverAltitude(adresse, cp, ville) {
+    var q = [adresse, cp, ville].filter(Boolean).join(" ");
+    if (!q || !window.fetch) return Promise.resolve(null);
+    var delai = function (p) { return Promise.race([p, new Promise(function (ok) { setTimeout(function () { ok(null); }, 6000); })]); };
+    return delai(fetch("https://api-adresse.data.gouv.fr/search/?limit=1&q=" + encodeURIComponent(q) + (cp ? "&postcode=" + encodeURIComponent(cp) : ""))
+      .then(function (r) { return r.json(); })
+      .then(function (j) {
+        var f = j && j.features && j.features[0]; if (!f) return null;
+        var c = f.geometry.coordinates;
+        return fetch("https://data.geopf.fr/altimetrie/1.0/calcul/alti/rest/elevation.json?resource=ign_rge_alti_wld&zonly=true&lon=" + c[0] + "&lat=" + c[1])
+          .then(function (r) { return r.json(); })
+          .then(function (a) { var z = a && a.elevations && a.elevations[0]; z = typeof z === "object" && z ? z.z : z; return (typeof z === "number" && z > -100) ? z : null; });
+      })).catch(function () { return null; });
+  }
+
   function creerTunnel(ctx) {
     var form = document.getElementById("dimensionnement");
     var formSim = ctx.formSimulateur;
     var sections = {};
     Array.prototype.forEach.call(form.querySelectorAll("[data-detape]"), function (s) { sections[s.getAttribute("data-detape")] = s; });
-    var QUESTIONS = ["annee", "isolation", "volume", "niveaux", "emetteurs", "ecs", "altitude", "compteur"];
+    var QUESTIONS = ["annee", "isolation", "volume", "niveaux", "emetteurs", "ecs", "compteur"];
     var ORDRE = QUESTIONS.concat(["note", "photos", "fin"]);
     var btnRetour = document.getElementById("dim-retour");
     var btnSuivant = document.getElementById("dim-suivant");
@@ -717,8 +742,12 @@
     var texteProg = document.getElementById("dim-prog-texte");
     var zoneProg = document.getElementById("dim-progression");
     var zoneErreur = document.getElementById("dim-erreur-envoi");
-    var rep = {};
+    var rep = { altitude: "moins-200" };
     var resultat = null, aides = null;
+    // Altitude trouvée automatiquement à partir de l'adresse (Base Adresse Nationale + IGN), sans question au client
+    trouverAltitude(ctx.adresse, ctx.etat.cp, ctx.ville).then(function (m) {
+      if (typeof m === "number" && isFinite(m)) { rep.altitudeM = Math.round(m); rep.altitude = m < 200 ? "moins-200" : m < 400 ? "200-400" : m < 800 ? "400-800" : "plus-800"; }
+    });
     var courante = null;
     var photos = [];      // {id, kind, name, dataUrl, envoyee}
     var compteurId = 0;
@@ -773,7 +802,7 @@
         rep.hauteur = parseFloat(valeurRadio("dHauteur") || "2.5");
         return true;
       }
-      var champs = { annee: "dAnnee", niveaux: "dNiveaux", emetteurs: "dEmetteurs", ecs: "dEcs", altitude: "dAltitude", compteur: "dCompteur" };
+      var champs = { annee: "dAnnee", niveaux: "dNiveaux", emetteurs: "dEmetteurs", ecs: "dEcs", compteur: "dCompteur" };
       if (champs[nom]) {
         var v = valeurRadio(champs[nom]);
         if (!v) return erreurEtape("Merci de choisir une réponse pour continuer.");
@@ -809,7 +838,7 @@
       h += ligne("Émetteurs", LIB.emetteurs[r.emetteurs]);
       h += ligne("Compteur", LIB.compteur[r.compteur]);
       h += ligne("Coefficient G", nf(r.g) + " W/m³.K");
-      h += ligne("Temp. de base (" + r.departement + ", " + LIB.altitude[r.altitude].toLowerCase() + ")", nf(r.tbase) + " °C");
+      h += ligne("Temp. de base (" + r.departement + ", " + (rep.altitudeM != null ? "altitude " + rep.altitudeM + " m" : LIB.altitude[r.altitude].toLowerCase()) + ")", nf(r.tbase) + " °C");
       h += ligne("Écart de température", nf(r.deltaT) + " °C");
       h += ligne("Puissance calculée (+10 %)", kw(r.puissanceCalculeeKw, 2));
       h += '</dl><p class="mention mt-2 mb-0">Méthode : déperditions = G × volume × (19 °C − température de base), puissance = déperditions × 1,1 arrondie à la gamme supérieure.</p></div></details>';
