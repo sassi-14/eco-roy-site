@@ -386,3 +386,22 @@ a.carte h3 { color: var(--vert); }
   .nav a.btn { padding: 8px 12px; font-size: .88rem; }
   .logo small { display: none; }
 }
+
+/* --- Visuels & illustrations (10/11/2026) --- */
+.logo img { width: auto; height: 40px; display: block; }
+.pied .logo img { height: 46px; }
+.illu-page { margin: 0; }
+.illu-page img, .illu-carte img { width: 100%; height: auto; border-radius: 24px; display: block; }
+.heros-illu .conteneur, .heros-illu-grille { display: grid; gap: 28px; align-items: center; }
+@media (min-width: 900px) { .heros-illu .conteneur, .heros-illu-grille { grid-template-columns: 1.1fr .9fr; gap: 48px; } }
+.heros-illu-grille { margin-bottom: 28px; }
+.heros-illu .conteneur > div, .heros-illu-grille > div { min-width: 0; }
+.etape-illu { width: 100%; height: auto; border-radius: 12px; margin: 0 0 14px; display: block; }
+.carte-illu { overflow: hidden; padding-top: 0; }
+.carte-illu .vignette { width: calc(100% + 48px); max-width: none; margin: 0 -24px 18px; height: auto; aspect-ratio: 14 / 9; object-fit: cover; display: block; }
+a.carte-illu { text-decoration: none; color: inherit; transition: transform .15s ease, box-shadow .15s ease; }
+a.carte-illu:hover { transform: translateY(-3px); box-shadow: var(--ombre); }
+.zones-grille { display: grid; gap: 24px; align-items: center; }
+@media (min-width: 900px) { .zones-grille { grid-template-columns: .9fr 1.1fr; gap: 40px; } }
+.illu-carte { margin: 0; }
+@media (min-width: 1080px) { .grille-4 { grid-template-columns: repeat(4, 1fr); } }
