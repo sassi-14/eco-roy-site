@@ -405,3 +405,9 @@ a.carte-illu:hover { transform: translateY(-3px); box-shadow: var(--ombre); }
 @media (min-width: 900px) { .zones-grille { grid-template-columns: .9fr 1.1fr; gap: 40px; } }
 .illu-carte { margin: 0; }
 @media (min-width: 1080px) { .grille-4 { grid-template-columns: repeat(4, 1fr); } }
+
+/* Bandeau cookies */
+#bandeau-cookies { position: fixed; left: 12px; right: 12px; bottom: 12px; z-index: 200; background: var(--papier); border: 1px solid var(--trait); border-radius: var(--rayon); box-shadow: var(--ombre); padding: 16px 18px; display: grid; gap: 12px; max-width: 720px; margin: 0 auto; font-size: .95rem; }
+#bandeau-cookies p { margin: 0; }
+#bandeau-cookies .bc-actions { display: flex; gap: 10px; justify-content: flex-end; flex-wrap: wrap; }
+@media (max-width: 899px) { #bandeau-cookies { bottom: 76px; } }
