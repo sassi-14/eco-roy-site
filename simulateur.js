@@ -332,6 +332,7 @@
       return {
         action: "lead",
         source: "Site internet",
+        rappelLe: (document.getElementById("rappel-le") || {}).value || "", creneau: (document.getElementById("rappel-libelle") || {}).value || "",
         nom: g("f-nom"),
         prenom: g("f-prenom"),
         tel: telNormalise(g("f-tel")),
@@ -363,7 +364,7 @@
 
       var html = "";
       html += '<h2 tabindex="-1" id="res-titre">Merci ' + echapper(document.getElementById("f-prenom").value.trim()) + ', votre demande est bien enregistrée.</h2>';
-      html += '<p class="sous">Un conseiller Eco-Roy vous rappelle <strong>sous 24 h ouvrées</strong> pour vérifier votre projet et répondre à vos questions.</p>';
+      html += '<p class="sous">Un conseiller Eco-Roy vous rappelle <strong>au créneau que vous avez choisi</strong> (ou dès que possible) pour vérifier votre projet et répondre à vos questions.</p>';
 
       if (collectif) {
         html += '<div class="alerte alerte-info"><p class="mb-0">Avec un chauffage collectif, une pompe à chaleur individuelle n\'est pas adaptée. Votre conseiller fera le point avec vous sur les autres solutions possibles.</p></div>';
@@ -1100,6 +1101,7 @@
       bouton.disabled = true; bouton.textContent = "Envoi en cours…";
       var payload = {
         action: "lead", source: "Site internet",
+        rappelLe: (document.getElementById("rappel-le") || {}).value || "", creneau: (document.getElementById("rappel-libelle") || {}).value || "",
         nom: g("c-nom").value.trim(), prenom: g("c-prenom").value.trim(),
         tel: telNormalise(g("c-tel").value.trim()), email: em,
         adresse: "", cp: g("c-cp").value.trim(), ville: "",
@@ -1112,7 +1114,7 @@
         pousserDataLayer({ event: "lead_submitted", lead_source: "contact", lead_produit: payload.produit, lead_departement: payload.cp.slice(0, 2) });
         rappel.reset();
         retour.className = "alerte alerte-info";
-        retour.innerHTML = "<p class=\"mb-0\"><strong>Merci, votre demande est bien enregistrée.</strong> Un conseiller vous rappelle sous 24 h ouvrées.</p>";
+        retour.innerHTML = "<p class=\"mb-0\"><strong>Merci, votre demande est bien enregistrée.</strong> Un conseiller vous rappelle au créneau choisi, ou dès que possible.</p>";
       }).catch(function () {
         retour.className = "alerte alerte-erreur";
         retour.innerHTML = '<p class="mb-0"><strong>L\'envoi a échoué.</strong> Réessayez dans un instant ou appelez-nous au <a href="tel:+33972149162">' + TEL_AFFICHE + '</a>.</p>';

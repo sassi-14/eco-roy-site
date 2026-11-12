@@ -19,6 +19,65 @@
     });
   }
 
+  // Barre d'action fixe sur mobile (appel + simulation), sauf sur la page du simulateur
+  if (!/eligibilite|espace-client/.test(location.pathname) && !document.querySelector(".barre-mobile")) {
+    var bm = document.createElement("div");
+    bm.className = "barre-mobile";
+    bm.innerHTML = '<a class="bm-tel" href="tel:+33972149162">📞 Appeler</a><a class="bm-cta" href="eligibilite.html">Tester mon éligibilité</a>';
+    document.body.appendChild(bm);
+  }
+
+  // Créneau de rappel : le visiteur choisit le jour et la plage horaire (lun-ven, 9 h - 19 h)
+  var zones = document.querySelectorAll("[data-creneaux]");
+  if (zones.length) {
+    var PLAGES = [[9, 11], [11, 13], [14, 16], [16, 18], [18, 19]];
+    var JOURS = ["dim.", "lun.", "mar.", "mer.", "jeu.", "ven.", "sam."];
+    var MOIS = ["janv.", "févr.", "mars", "avr.", "mai", "juin", "juil.", "août", "sept.", "oct.", "nov.", "déc."];
+    var p2 = function (x) { return (x < 10 ? "0" : "") + x; };
+    var maintenant = new Date();
+    var jours = [];
+    for (var j = 0; jours.length < 5 && j < 12; j++) {
+      var d = new Date(maintenant.getFullYear(), maintenant.getMonth(), maintenant.getDate() + j);
+      if (d.getDay() === 0 || d.getDay() === 6) continue;
+      var libres = PLAGES.filter(function (pl) { return new Date(d.getFullYear(), d.getMonth(), d.getDate(), pl[1] - 1, 0) > maintenant; });
+      if (libres.length) jours.push({ d: d, plages: libres, nom: j === 0 ? "Aujourd'hui" : j === 1 ? "Demain" : JOURS[d.getDay()] + " " + d.getDate() + " " + MOIS[d.getMonth()] });
+    }
+    Array.prototype.forEach.call(zones, function (zone) {
+      var choixJour = -1;
+      zone.innerHTML = '<span class="etiquette-creneau">Quand souhaitez-vous être rappelé ?</span>' +
+        '<div class="creneaux-jours" role="group" aria-label="Jour du rappel"></div><div class="creneaux-heures" role="group" aria-label="Plage horaire"></div>' +
+        '<p class="aide creneau-resume" aria-live="polite">Sans choix de votre part, nous vous rappelons dès que possible (lundi au vendredi, 9 h - 19 h).</p>' +
+        '<input type="hidden" id="rappel-le"><input type="hidden" id="rappel-libelle">';
+      var zj = zone.querySelector(".creneaux-jours"), zh = zone.querySelector(".creneaux-heures"), res = zone.querySelector(".creneau-resume");
+      var le = zone.querySelector("#rappel-le"), lib = zone.querySelector("#rappel-libelle");
+      function bouton(txt, actif) { var b = document.createElement("button"); b.type = "button"; b.className = "creneau" + (actif ? " actif" : ""); b.textContent = txt; b.setAttribute("aria-pressed", actif ? "true" : "false"); return b; }
+      function dessiner(plageChoisie) {
+        zj.innerHTML = ""; zh.innerHTML = "";
+        var asap = bouton("Dès que possible", choixJour === -1);
+        asap.addEventListener("click", function () { choixJour = -1; le.value = ""; lib.value = ""; res.textContent = "Nous vous rappelons dès que possible (lundi au vendredi, 9 h - 19 h)."; dessiner(); });
+        zj.appendChild(asap);
+        jours.forEach(function (jr, i) {
+          var b = bouton(jr.nom, choixJour === i);
+          b.addEventListener("click", function () { choixJour = i; le.value = ""; lib.value = ""; res.textContent = "Choisissez maintenant une plage horaire."; dessiner(); });
+          zj.appendChild(b);
+        });
+        if (choixJour >= 0) jours[choixJour].plages.forEach(function (pl) {
+          var cle = pl[0] + "-" + pl[1];
+          var b = bouton(pl[0] + " h - " + pl[1] + " h", plageChoisie === cle);
+          b.addEventListener("click", function () {
+            var jr = jours[choixJour], d = jr.d;
+            le.value = d.getFullYear() + "-" + p2(d.getMonth() + 1) + "-" + p2(d.getDate()) + "T" + p2(pl[0]) + ":00";
+            lib.value = jr.nom + " entre " + pl[0] + " h et " + pl[1] + " h";
+            res.textContent = "Un conseiller vous rappelle " + lib.value.charAt(0).toLowerCase() + lib.value.slice(1) + ".";
+            dessiner(cle);
+          });
+          zh.appendChild(b);
+        });
+      }
+      dessiner();
+    });
+  }
+
   // Année du pied de page
   var annee = document.querySelectorAll("[data-annee]");
   for (var i = 0; i < annee.length; i++) annee[i].textContent = new Date().getFullYear();

@@ -411,3 +411,31 @@ a.carte-illu:hover { transform: translateY(-3px); box-shadow: var(--ombre); }
 #bandeau-cookies p { margin: 0; }
 #bandeau-cookies .bc-actions { display: flex; gap: 10px; justify-content: flex-end; flex-wrap: wrap; }
 @media (max-width: 899px) { #bandeau-cookies { bottom: 76px; } }
+
+/* --- Ajouts 12/11 : preuves, comparatif, entretien, barre mobile --- */
+.bandeau-preuves { background: var(--vert); color: #e9f2ea; font-size: .92rem; }
+.bandeau-preuves .conteneur { display: flex; flex-wrap: wrap; gap: 8px 22px; justify-content: center; padding-top: 12px; padding-bottom: 12px; }
+.bandeau-preuves b { color: #fff; }
+.comparatif { display: grid; gap: 18px; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
+.comp-avec { border: 2px solid var(--vert-2); background: var(--vert-clair); }
+.liste-x, .liste-ok { list-style: none; padding: 0; margin: 0; display: grid; gap: 8px; }
+.liste-x li::before { content: "✕"; color: #b42318; font-weight: 700; margin-right: 8px; }
+.liste-ok li::before { content: "✓"; color: var(--vert-2); font-weight: 700; margin-right: 8px; }
+.grille-3-mini { display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); }
+.prix-carte .prix { font-family: var(--f-titre); font-size: 1.8rem; font-weight: 700; color: var(--vert); margin: 4px 0 8px; }
+.prix-carte .prix small { font-size: .9rem; font-weight: 500; color: var(--encre-2); }
+.barre-mobile { display: none; }
+@media (max-width: 760px) {
+  .barre-mobile { display: grid; grid-template-columns: 1fr 1.4fr; gap: 8px; position: fixed; left: 0; right: 0; bottom: 0; z-index: 40; padding: 8px max(12px, env(safe-area-inset-left)) calc(8px + env(safe-area-inset-bottom)); background: #fff; border-top: 1px solid var(--trait); box-shadow: 0 -4px 16px rgba(0,0,0,.08); }
+  .barre-mobile a { display: flex; align-items: center; justify-content: center; gap: 6px; border-radius: 10px; padding: 12px 8px; font-weight: 700; text-decoration: none; font-size: .95rem; }
+  .barre-mobile .bm-tel { border: 2px solid var(--vert); color: var(--vert); }
+  .barre-mobile .bm-cta { background: var(--terre, #a8461f); color: #fff; }
+  body { padding-bottom: 72px; }
+}
+.zone-creneaux { border: 1px solid var(--trait); border-radius: var(--rayon); padding: 14px; background: var(--creme); }
+.etiquette-creneau { display: block; font-weight: 600; margin-bottom: 8px; }
+.creneaux-jours, .creneaux-heures { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 8px; }
+.creneau { border: 1.5px solid var(--trait); background: #fff; color: var(--encre); border-radius: 99px; padding: 8px 14px; font: inherit; font-size: .95rem; cursor: pointer; }
+.creneau:hover { border-color: var(--vert-2); }
+.creneau.actif { background: var(--vert); border-color: var(--vert); color: #fff; font-weight: 600; }
+.creneau-resume { margin: 0; }
