@@ -454,7 +454,7 @@
         zoneErreur.innerHTML = (err && err.type === "reseau")
           ? "<p><strong>Votre demande n'a pas pu être envoyée</strong> (problème de connexion). Vos réponses sont conservées : réessayez dans un instant.</p>"
           : "<p><strong>Votre demande n'a pas pu être enregistrée.</strong> Vos réponses sont conservées : réessayez dans un instant.</p>";
-        zoneErreur.innerHTML += '<p class="mb-0">Vous pouvez aussi nous appeler directement au <a href="tel:+33972149162"><strong>' + TEL_AFFICHE + '</strong></a> (ou au <a href="tel:+33614724041">06 14 72 40 41</a>).</p>';
+        zoneErreur.innerHTML += '<p class="mb-0">Vous pouvez aussi nous appeler directement au <a href="tel:+33972149162"><strong>' + TEL_AFFICHE + '</strong></a>.</p>';
         zoneErreur.hidden = false;
         zoneErreur.focus();
       }).then(function () {
