@@ -13,7 +13,20 @@
   var CONFIG = {
     // Prime CEE « Coup de pouce chauffage » pour une PAC air/eau, versée via notre délégataire
     // et déduite directement du devis (€, par profil MaPrimeRénov').
-    cee: { bleu: 5800, jaune: 4000, violet: 4000, rose: 4000 }, ceeBleuSansMPR: 7500, // montants affichés au client (part CEE pure, hors commission). 4600 possible selon machine : on affiche le bas.
+    cee: { bleu: 5800, jaune: 4000, violet: 4000, rose: 4000 }, ceeBleuSansMPR: 7500,
+    // Calcul réel de la prime CEE selon la fiche BAR-TH-171 (PAC air/eau) + Coup de pouce chauffage.
+    // Prime = forfait (Etas) × facteur surface × facteur zone × 5 (Coup de pouce) × prix du MWh cumac payé par notre délégataire.
+    ceeFiche: {
+      forfait: { maison: { std: 90900, haut: 109200 }, appartement: { std: 48700, haut: 58900 } }, // kWh cumac ; haut = Etas ≥ 140 %
+      surface: { maison: [[70, 0.5], [90, 0.7], [Infinity, 1]], appartement: [[35, 0.5], [60, 0.7], [Infinity, 1]] },
+      zone: { H1: 1.2, H2: 1, H3: 0.7 },
+      coupDePouce: 5,
+      // €/MWh cumac reversés au client (prix délégataire, à mettre à jour) : très modestes / autres.
+      prixMWh: { bleu: 10.63, jaune: 7.33, violet: 7.33, rose: 7.33 },
+      etasDefaut: "std"
+    },
+    // MaPrimeRénov' : nous montons le dossier mais elle n'est PAS déduite du reste à charge affiché (délais Anah).
+    mprDeduite: false, // montants affichés au client (part CEE pure, hors commission). 4600 possible selon machine : on affiche le bas.
     // Le Coup de pouce vise le remplacement d'une chaudière fossile : pour les autres chauffages,
     // le montant reste affiché mais signalé « à confirmer ».
     ceeChauffagesCoupDePouce: ["Chaudière gaz", "Chaudière fioul"],
@@ -382,7 +395,7 @@
             html += '<p>Au-delà des plafonds de revenus, MaPrimeRénov\' ne finance pas l\'installation d\'une PAC seule, mais la <strong>prime CEE</strong> reste accessible pour réduire votre reste à charge.</p>';
           }
           var pre = dimensionner(prelimDimensionnement());
-          var aidesA = calculAides(couleur, pre.prixTTC, mprPossible ? aide : 0, etat.chauffage);
+          var aidesA = calculAides(couleur, pre.prixTTC, mprPossible ? aide : 0, etat.chauffage, { surface: etat.surface, cp: etat.cp, habitat: etat.habitat });
           html += blocAides(aidesA, pre.prixTTC,
             "Prix indicatif d'une PAC air/eau " + pre.puissanceConseilleeKw + " kW",
             "Pré-estimation d'après votre surface, avant le questionnaire de dimensionnement");
@@ -536,9 +549,24 @@
    * - Écrêtement : si CEE + MPR > taux × prix TTC, MPR est réduite (CONFIG.ecretement).
    * couleur absente → aides non calculées (seul le prix est affiché).
    */
-  function calculAides(couleur, prixTTC, mprMontant, chauffage) {
+  var ZONE_H1 = "01 02 03 05 08 10 14 15 19 21 23 25 27 28 38 39 42 43 45 51 52 54 55 57 58 59 60 61 62 63 67 68 69 70 71 73 74 75 76 77 78 80 87 88 89 90 91 92 93 94 95".split(" ");
+  var ZONE_H3 = "06 11 13 2A 2B 30 34 66 83".split(" ");
+  function zoneClimatique(cp) { var d = departement(cp); return ZONE_H3.indexOf(d) >= 0 ? "H3" : ZONE_H1.indexOf(d) >= 0 ? "H1" : "H2"; }
+  /** Prime CEE selon la fiche BAR-TH-171 ; null si les données manquent (on retombe sur le forfait CONFIG.cee). */
+  function ceeFiche(couleur, info) {
+    var f = CONFIG.ceeFiche; if (!f || !couleur || !info) return null;
+    var surf = Number(String(info.surface || "").replace(",", ".")); if (!(surf > 0) || !info.cp) return null;
+    var type = info.habitat === "Appartement" ? "appartement" : "maison";
+    var fs = 1; for (var i = 0; i < f.surface[type].length; i++) { if (surf < f.surface[type][i][0]) { fs = f.surface[type][i][1]; break; } }
+    var zone = zoneClimatique(info.cp);
+    var kwh = f.forfait[type][info.etas || f.etasDefaut] * fs * f.zone[zone];
+    var cdp = CONFIG.ceeChauffagesCoupDePouce.indexOf(info.chauffage) >= 0 ? f.coupDePouce : 1;
+    return { montant: Math.floor(kwh * cdp / 1000 * (f.prixMWh[couleur] || 0) / 10) * 10, zone: zone, facteurSurface: fs, coupDePouce: cdp > 1 };
+  }
+  function calculAides(couleur, prixTTC, mprMontant, chauffage, info) {
     var cee = couleur ? (CONFIG.cee[couleur] || 0) : 0;
-    if (couleur === "bleu" && !(mprMontant > 0) && CONFIG.ceeBleuSansMPR) cee = CONFIG.ceeBleuSansMPR; // bleu sans MaPrimeRénov' : prime CEE majorée
+    var fiche = ceeFiche(couleur, info ? { surface: info.surface, cp: info.cp, habitat: info.habitat, chauffage: chauffage, etas: info.etas } : null);
+    if (fiche) cee = fiche.montant;
     var mprBrut = couleur ? Math.max(0, mprMontant || 0) : 0;
     var mpr = mprBrut, ecrete = false;
     if (couleur && CONFIG.ecretement && CONFIG.ecretement[couleur] != null) {
@@ -547,10 +575,11 @@
     }
     var racSignature = Math.max(0, prixTTC - cee);
     return {
+      fiche: fiche, mprDeduite: !!CONFIG.mprDeduite,
       connu: !!couleur, couleur: couleur || "", cee: cee, mpr: mpr, mprBrut: mprBrut, ecrete: ecrete,
       tauxEcretement: (couleur && CONFIG.ecretement) ? CONFIG.ecretement[couleur] : null,
       ceeAConfirmer: !!couleur && CONFIG.ceeChauffagesCoupDePouce.indexOf(chauffage) === -1,
-      racSignature: racSignature, racFinal: Math.max(0, racSignature - mpr)
+      racSignature: racSignature, racFinal: CONFIG.mprDeduite ? Math.max(0, racSignature - mpr) : racSignature
     };
   }
 
@@ -559,24 +588,22 @@
     var reserve = "sous réserve d'éligibilité, de la visite technique et de l'instruction des dossiers";
     var h = '<div class="bloc-aides"><h3>Vos aides et votre reste à charge</h3>';
     if (a.connu) {
-      h += '<p>La <strong>prime CEE</strong> est déduite directement de votre devis : vous n\'avez pas à l\'avancer. <strong>MaPrimeRénov\'</strong> est versée par l\'Anah après les travaux ; en tant que mandataire, nous montons le dossier pour vous.</p>';
+      h += '<p>La <strong>prime CEE</strong> est déduite directement de votre devis : vous n\'avez pas à l\'avancer. Le reste à charge ci-dessous ne compte <strong>que la prime CEE</strong>.</p>';
     }
     h += '<dl class="devis">';
     h += '<div><dt>' + echapper(libellePrix) + ' <small>' + echapper(sousPrix) + ' · TTC, TVA ' + String(CONFIG.tva).replace(".", ",") + ' %</small></dt><dd>' + euros(prixTTC) + '</dd></div>';
     if (a.connu) {
-      h += '<div class="moins"><dt>Prime CEE « Coup de pouce chauffage » <small>Versée via notre délégataire, déduite du devis' + (a.ceeAConfirmer ? ' · à confirmer : le Coup de pouce vise le remplacement d\'une chaudière gaz ou fioul' : '') + '</small></dt><dd>− ' + euros(a.cee) + '</dd></div>';
-      h += '<div class="total"><dt>Reste à charge à la signature</dt><dd>' + euros(a.racSignature) + '</dd></div>';
-      h += '<div class="moins"><dt>MaPrimeRénov\' estimée <small>Versée par l\'Anah après les travaux' + (a.ecrete ? ' · ajustée : le total des aides est plafonné à ' + Math.round(a.tauxEcretement * 100) + ' % du prix TTC (au lieu de ' + euros(a.mprBrut) + ')' : '') + '</small></dt><dd>− ' + euros(a.mpr) + '</dd></div>';
-      h += '<div class="total final"><dt>' + (a.racFinal === 0
-        ? 'Reste à charge final estimé : 0 € <small>(' + reserve + ')</small>'
-        : 'Reste à charge final après versement de MaPrimeRénov\'') + '</dt><dd>' + euros(a.racFinal) + '</dd></div>';
+      h += '<div class="moins"><dt>Prime CEE « Coup de pouce chauffage » <small>Versée via notre délégataire, déduite du devis' + (a.fiche ? ' · calculée selon la fiche BAR-TH-171 (zone ' + a.fiche.zone + (a.fiche.facteurSurface < 1 ? ', surface de moins de ' + (a.fiche.facteurSurface === 0.5 ? '70' : '90') + ' m²' : '') + ')' : '') + (a.ceeAConfirmer ? ' · à confirmer : le Coup de pouce vise le remplacement d\'une chaudière gaz ou fioul' : '') + '</small></dt><dd>− ' + euros(a.cee) + '</dd></div>';
+      h += '<div class="total final"><dt>Votre reste à charge <small>prix − prime CEE</small></dt><dd>' + euros(a.racSignature) + '</dd></div>';
     }
     h += '</dl>';
-    if (a.connu && a.racFinal > 0) {
-      h += '<div class="encadre encadre-vert mt-2"><p class="mb-0"><strong>Vous ne voulez pas payer ce reste à charge ? Une solution s\'offre à vous.</strong><br>' +
-        'Devenez <strong>Partenaire Vitrine Eco Roy</strong> : vous accueillez notre panneau devant votre maison pendant les travaux et quelques mois après, et vous partagez votre témoignage avec photos avant/après sur notre site. ' +
-        'En échange, Eco Roy peut prendre en charge tout ou partie de votre reste à charge.</p>' +
-        '<p class="mention mb-0">Offre sous conditions et en nombre limité. La remise est indiquée sur votre devis. Votre conseiller vous la présente lors de son appel.</p></div>';
+    if (a.connu && a.mprBrut > 0) {
+      h += '<p class="mention mt-2 mb-0">* <strong>MaPrimeRénov\'</strong> (jusqu\'à ' + euros(a.mpr) + ' estimés pour votre profil) : en tant que mandataire, nous montons et suivons votre dossier auprès de l\'Anah. Les délais de versement étant très longs et l\'aide n\'étant pas garantie, nous ne la déduisons pas de votre reste à charge. Si elle est accordée, son montant vous est intégralement reversé dès réception.</p>';
+    }
+    if (a.connu && a.racSignature > 0) {
+      h += '<div class="encadre encadre-vert mt-2"><p class="mb-0"><strong>Devenez chantier vitrine Eco Roy.</strong><br>' +
+        'Vous acceptez notre panneau devant votre maison pendant les travaux et quelques mois après, et vous nous autorisez à publier les photos du chantier : en échange, une remise est appliquée sur le prix de votre devis.</p>' +
+        '<p class="mention mb-0">Offre sous conditions et en nombre limité. Le montant de la remise figure sur votre devis. Votre conseiller vous la présente lors de son appel.</p></div>';
     }
     if (!a.connu) h += '<p class="mention mt-2 mb-0">Sans votre profil MaPrimeRénov\', les aides (prime CEE et MaPrimeRénov\') seront calculées par votre conseiller et déduites de ce prix.</p>';
     h += '<p class="mention mt-2 mb-0">Estimation indicative, ' + reserve + '.</p></div>';
@@ -818,7 +845,7 @@
         emetteurs: rep.emetteurs, ecs: rep.ecs === "oui", nbPersonnes: ctx.etat.personnes,
         altitude: rep.altitude, compteur: rep.compteur, cp: ctx.etat.cp
       });
-      aides = calculAides(ctx.couleur, resultat.prixTTC, ctx.mprMontant, ctx.etat.chauffage);
+      aides = calculAides(ctx.couleur, resultat.prixTTC, ctx.mprMontant, ctx.etat.chauffage, { surface: ctx.etat.surface, cp: ctx.etat.cp, habitat: ctx.etat.habitat });
       var r = resultat;
       var ligne = function (dt, dd) { return '<div><dt>' + dt + '</dt><dd>' + dd + '</dd></div>'; };
       var nf = function (n) { return String(n).replace(".", ","); };
