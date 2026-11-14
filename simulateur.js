@@ -22,8 +22,8 @@
       zone: { H1: 1.2, H2: 1, H3: 0.7 },
       coupDePouce: 5,
       // €/MWh cumac reversés au client (prix délégataire, à mettre à jour) : très modestes / autres.
-      prixMWh: { bleu: 10.63, jaune: 7.33, violet: 7.33, rose: 7.33 },
-      etasDefaut: "std"
+      prixMWh: { bleu: 13.8, jaune: 13.8, violet: 7.33, rose: 7.33 }, // précaires (bleu, jaune) : prix Drapo ; autres : à confirmer
+      etasDefaut: "haut" // nous ne posons que des machines Etas ≥ 140 %
     },
     // MaPrimeRénov' : nous montons le dossier mais elle n'est PAS déduite du reste à charge affiché (délais Anah).
     mprDeduite: false, // montants affichés au client (part CEE pure, hors commission). 4600 possible selon machine : on affiche le bas.
