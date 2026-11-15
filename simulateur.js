@@ -592,28 +592,35 @@
   }
 
   /** Tableau prix − CEE = signature − MPR = final (HTML) */
+  /** Choix « chantier vitrine » du visiteur (profils bleus) : panneau + photos contre un reste à charge de 1 €. */
+  var vitrine = false;
+  document.addEventListener("change", function (e) {
+    if (!e.target || !e.target.classList || !e.target.classList.contains("chk-vitrine")) return;
+    vitrine = e.target.checked;
+    Array.prototype.forEach.call(document.querySelectorAll(".chk-vitrine"), function (c) { c.checked = vitrine; });
+    Array.prototype.forEach.call(document.querySelectorAll(".rac-bleu .rac-montant"), function (el) { el.textContent = vitrine ? el.getAttribute("data-vitrine") : el.getAttribute("data-normal"); });
+    Array.prototype.forEach.call(document.querySelectorAll(".rac-bleu .rac-detail"), function (el) { el.textContent = vitrine ? "toutes aides déduites + remise chantier vitrine" : "toutes aides déduites"; });
+    Array.prototype.forEach.call(document.querySelectorAll(".vitrine-ok"), function (el) { el.hidden = !vitrine; });
+  });
+
   function blocAides(a, prixTTC, libellePrix, sousPrix) {
     var reserve = "sous réserve d'éligibilité, de la visite technique et de l'instruction des dossiers";
-    var h = '<div class="bloc-aides"><h3>Vos aides et votre reste à charge</h3>';
-    if (a.connu) {
-      h += '<p>La <strong>prime CEE</strong> est déduite directement de votre devis : vous n\'avez pas à l\'avancer. Le reste à charge ci-dessous ne compte <strong>que la prime CEE</strong>.</p>';
-    }
+    var bleu = a.connu && a.couleur === "bleu" && a.racSignature > 1;
+    var h = '<div class="bloc-aides"><h3>Votre reste à charge</h3>';
+    if (a.connu) h += '<p>Toutes les aides auxquelles vous avez droit sont <strong>déduites de votre projet</strong> : vous n\'avez rien à avancer. Nous montons tout le dossier pour vous.</p>';
     h += '<dl class="devis">';
     h += '<div><dt>' + echapper(libellePrix) + ' <small>' + echapper(sousPrix) + ' · TTC, TVA ' + String(CONFIG.tva).replace(".", ",") + ' %</small></dt><dd>' + euros(prixTTC) + '</dd></div>';
     if (a.connu) {
-      h += '<div class="moins"><dt>Prime CEE « Coup de pouce chauffage » <small>Versée via notre délégataire, déduite du devis' + (a.fiche ? ' · calculée selon la fiche BAR-TH-171 (zone ' + a.fiche.zone + (a.fiche.facteurSurface < 1 ? ', surface de moins de ' + (a.fiche.facteurSurface === 0.5 ? '70' : '90') + ' m²' : '') + ')' : '') + (a.ceeAConfirmer ? ' · à confirmer : le Coup de pouce vise le remplacement d\'une chaudière gaz ou fioul' : '') + '</small></dt><dd>− ' + euros(a.cee) + '</dd></div>';
-      h += '<div class="total final"><dt>Votre reste à charge <small>prix − prime CEE</small></dt><dd>' + euros(a.racSignature) + '</dd></div>';
+      var normal = euros(a.racSignature), avecVitrine = euros(1);
+      h += '<div class="total final' + (bleu ? ' rac-bleu' : '') + '"><dt>Votre reste à charge estimé <small class="rac-detail">' + (bleu && vitrine ? 'toutes aides déduites + remise chantier vitrine' : 'toutes aides déduites') + '</small></dt><dd class="rac-montant" data-normal="' + normal + '" data-vitrine="' + avecVitrine + '">' + (bleu && vitrine ? avecVitrine : normal) + '</dd></div>';
     }
     h += '</dl>';
-    if (a.connu && a.mprBrut > 0) {
-      h += '<p class="mention mt-2 mb-0">* <strong>MaPrimeRénov\'</strong> (jusqu\'à ' + euros(a.mpr) + ' estimés pour votre profil) : en tant que mandataire, nous montons et suivons votre dossier auprès de l\'Anah. Les délais de versement étant très longs et l\'aide n\'étant pas garantie, nous ne la déduisons pas de votre reste à charge. Si elle est accordée, son montant vous est intégralement reversé dès réception.</p>';
+    if (bleu) {
+      h += '<div class="encadre encadre-vert mt-2"><label class="vitrine-choix"><input type="checkbox" class="chk-vitrine"' + (vitrine ? ' checked' : '') + '> <span><strong>Je deviens chantier vitrine Eco Roy :</strong> j\'accepte un panneau Eco Roy devant ma maison pendant les travaux et les mois qui suivent, et j\'autorise Eco Roy à utiliser les photos de mon chantier pour sa communication.</span></label>' +
+        '<p class="vitrine-ok mb-0 mt-2"' + (vitrine ? '' : ' hidden') + '><strong>Votre reste à charge passe à 1 €.</strong> Nous montons votre dossier complet et vous le signez le jour de l\'installation.</p>' +
+        '<p class="mention mb-0 mt-2">Offre réservée aux foyers aux revenus très modestes, en nombre limité, après visite technique. La remise figure sur votre devis.</p></div>';
     }
-    if (a.connu && a.racSignature > 0) {
-      h += '<div class="encadre encadre-vert mt-2"><p class="mb-0"><strong>Devenez chantier vitrine Eco Roy.</strong><br>' +
-        'Vous acceptez notre panneau devant votre maison pendant les travaux et quelques mois après, et vous nous autorisez à publier les photos du chantier : en échange, une remise est appliquée sur le prix de votre devis.</p>' +
-        '<p class="mention mb-0">Offre sous conditions et en nombre limité. Le montant de la remise figure sur votre devis. Votre conseiller vous la présente lors de son appel.</p></div>';
-    }
-    if (!a.connu) h += '<p class="mention mt-2 mb-0">Sans votre profil MaPrimeRénov\', les aides (prime CEE et MaPrimeRénov\') seront calculées par votre conseiller et déduites de ce prix.</p>';
+    if (!a.connu) h += '<p class="mention mt-2 mb-0">Sans votre profil de revenus, les aides seront calculées par votre conseiller et déduites de ce prix.</p>';
     h += '<p class="mention mt-2 mb-0">Estimation indicative, ' + reserve + '.</p></div>';
     return h;
   }
@@ -1041,6 +1048,7 @@
       d.chauffageActuel = ctx.etat.chauffage || "";
       d.photosEnvoyees = envoyees;
       d.photosPlusTard = !!plusTard;
+      d.chantierVitrine = vitrine;
       var payload = base();
       payload.action = "leadDimensionnement";
       payload.prenom = ctx.prenom; payload.email = ctx.email; payload.cp = ctx.etat.cp || "";

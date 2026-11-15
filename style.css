@@ -521,3 +521,5 @@ html[data-palette="soleil-off"] { --titre: #102a43; --encre: #1c2b39; --encre-2:
 .ha-visuel.sans-photo { background: var(--sombre); border-radius: 20px; padding: 18px; background-image: radial-gradient(circle at 85% 15%, rgba(60,184,120,.28), transparent 45%), radial-gradient(circle at 10% 95%, rgba(255,255,255,.08), transparent 40%); }
 .ha-visuel.sans-photo .carte-sim { position: relative; left: auto; bottom: auto; width: auto; margin: 0; }
 @media (min-width: 960px) { .ha-visuel.sans-photo { padding: 40px; } .ha-visuel.sans-photo .cs-choix small { display: block; } .ha-visuel.sans-photo .carte-sim h2 { font-size: 1.45rem; } }
+.vitrine-choix { display: flex; gap: 10px; align-items: flex-start; cursor: pointer; }
+.vitrine-choix input { width: 20px; height: 20px; margin-top: 3px; flex: none; accent-color: var(--vert); }
