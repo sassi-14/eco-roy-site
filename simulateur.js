@@ -154,6 +154,12 @@
   /* Validations */
   var RE_TEL = /^(?:(?:\+|00)33[\s.-]?|0)[1-9](?:[\s.-]?\d{2}){4}$/;
   var RE_EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+  /** Texte exact de la case cochée par le visiteur : il est joint à la demande pour en garder la preuve. */
+  function texteAccord(id) {
+    var l = document.querySelector('label[for="' + id + '"]');
+    return l ? l.textContent.replace(/\s+/g, " ").trim().slice(0, 480) : "";
+  }
+
   function telNormalise(t) { return String(t).replace(/[\s.-]/g, ""); }
 
   function marquerErreur(input, message) {
@@ -345,6 +351,8 @@
       return {
         action: "lead",
         source: "Site internet",
+        // Preuve de la demande de rappel (art. R. 223-4 du code de la consommation) : texte coché et page d'origine.
+        consentement: texteAccord("f-consentement"), page: location.pathname,
         rappelLe: (document.getElementById("rappel-le") || {}).value || "", creneau: (document.getElementById("rappel-libelle") || {}).value || "",
         nom: g("f-nom"),
         prenom: g("f-prenom"),
@@ -1128,6 +1136,7 @@
       bouton.disabled = true; bouton.textContent = "Envoi en cours…";
       var payload = {
         action: "lead", source: "Site internet",
+        consentement: texteAccord("c-consentement"), page: location.pathname,
         rappelLe: (document.getElementById("rappel-le") || {}).value || "", creneau: (document.getElementById("rappel-libelle") || {}).value || "",
         nom: g("c-nom").value.trim(), prenom: g("c-prenom").value.trim(),
         tel: telNormalise(g("c-tel").value.trim()), email: em,
