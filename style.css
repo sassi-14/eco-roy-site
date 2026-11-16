@@ -523,3 +523,17 @@ html[data-palette="soleil-off"] { --titre: #102a43; --encre: #1c2b39; --encre-2:
 @media (min-width: 960px) { .ha-visuel.sans-photo { padding: 40px; } .ha-visuel.sans-photo .cs-choix small { display: block; } .ha-visuel.sans-photo .carte-sim h2 { font-size: 1.45rem; } }
 .vitrine-choix { display: flex; gap: 10px; align-items: flex-start; cursor: pointer; }
 .vitrine-choix input { width: 20px; height: 20px; margin-top: 3px; flex: none; accent-color: var(--vert); }
+
+/* Message d'information obligatoire du service public France Rénov' (arrêté du 7 juillet 2026) :
+   sobre, lisible, et visuellement distinct des contenus commerciaux du site. */
+.france-renov { background: #fff; border-top: 1px solid #c9d3de; border-bottom: 1px solid #c9d3de; }
+.france-renov .conteneur { padding-block: 16px; }
+.france-renov a { display: block; color: #16233a; font-size: 1rem; line-height: 1.45; text-align: center; text-decoration: none; }
+.france-renov a strong { font-weight: 700; text-decoration: underline; text-underline-offset: 3px; white-space: nowrap; }
+.france-renov a:hover strong, .france-renov a:focus-visible strong { text-decoration-thickness: 2px; }
+
+/* Galerie de chantiers */
+.galerie { display: grid; gap: 10px; grid-template-columns: repeat(2, minmax(0, 1fr)); margin-block: 16px; }
+@media (min-width: 760px) { .galerie { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; } }
+.galerie figure { margin: 0; aspect-ratio: 4 / 5; overflow: hidden; border-radius: 10px; background: var(--gris); max-width: 100%; }
+.galerie img { width: 100%; height: 100%; object-fit: cover; display: block; }
