@@ -60,7 +60,10 @@
     // (tranche 400-800 m comptée à 800 m et « plus de 800 m » à 1 000 m, par prudence).
     altitude: { "moins-200": 0, "200-400": -1, "400-800": -3, "plus-800": -4 },
     seuilTriphaseKw: 14,
-    ballonLitres: 200, ballonLitresGrand: 300, ballonSeuilPersonnes: 5,
+    // Puissance moyenne selon la surface chauffée (décision de Sassi, 18 nov.) : [surface max m², kW]
+    puissanceSurface: [[60, 6], [85, 8], [115, 11], [130, 12], [155, 14], [180, 16], [Infinity, 22]],
+    // Eau chaude : toujours un ballon électrique, taille selon la surface, 270 L maximum
+    ballonSurface: [[80, 150], [120, 200], [Infinity, 270]],
 
     // Photos avant chantier
     photosMax: 8,
@@ -406,7 +409,7 @@
           var pre = dimensionner(prelimDimensionnement());
           var aidesA = calculAides(couleur, pre.prixTTC, mprPossible ? aide : 0, etat.chauffage, { surface: etat.surface, cp: etat.cp, habitat: etat.habitat });
           html += blocAides(aidesA, pre.prixTTC,
-            "Prix indicatif d'une PAC air/eau " + pre.puissanceConseilleeKw + " kW",
+            "Prix indicatif d'une PAC air/eau " + pre.puissanceConseilleeKw + " kW + ballon électrique",
             "Pré-estimation d'après votre surface, avant le questionnaire de dimensionnement");
         }
       } else {
@@ -414,7 +417,7 @@
       }
       var tunnelPossible = !collectif && produit() === "PAC air/eau";
       if (tunnelPossible) {
-        html += '<div class="cta-tunnel"><h3>Recevez votre pré-devis en 2 minutes</h3><p>8 questions sur votre maison pour calculer la puissance adaptée, puis l\'envoi de quelques photos : un technicien RGE valide votre note et vous recevez votre devis définitif par e-mail.</p><button type="button" class="btn btn-principal" id="btn-dimensionnement">Calculer ma PAC et mon pré-devis</button></div>';
+        html += '<div class="cta-tunnel"><h3>Recevez votre pré-devis en 2 minutes</h3><p>6 questions sur votre maison pour calculer la puissance adaptée : un technicien RGE valide votre note et vous recevez votre devis définitif par e-mail.</p><button type="button" class="btn btn-principal" id="btn-dimensionnement">Calculer ma PAC et mon pré-devis</button></div>';
       }
       html += '<p class="mention">Estimation indicative, sous réserve d\'éligibilité, de la visite technique et de l\'instruction des dossiers par l\'Anah et le délégataire CEE. Barèmes au 1<sup>er</sup> janvier 2026, susceptibles d\'évoluer.</p>';
       html += '<div class="actions mt-2"><a class="btn btn-vert" href="aides-renovation-2026.html">Comprendre les aides 2026</a><a class="btn btn-contour" href="tel:+33972149162">Appeler le ' + TEL_AFFICHE + '</a></div>';
@@ -661,26 +664,25 @@
     var deperditionsW = Math.round(g * volume * deltaT);
     var puissanceCalculeeKw = Math.round(deperditionsW * CONFIG.marge / 10) / 100;
     var gamme = null;
-    for (var i = 0; i < CONFIG.gammes.length; i++) if (CONFIG.gammes[i] >= puissanceCalculeeKw - 1e-9) { gamme = CONFIG.gammes[i]; break; }
-    var horsGamme = gamme === null;
-    if (horsGamme) gamme = CONFIG.gammes[CONFIG.gammes.length - 1];
+    for (var i = 0; i < CONFIG.puissanceSurface.length; i++) if (d.surface <= CONFIG.puissanceSurface[i][0]) { gamme = CONFIG.puissanceSurface[i][1]; break; }
+    var horsGamme = d.surface > 250;
 
     var hauteTemp = d.emetteurs === "fonte" || d.emetteurs === "acier-alu" || d.emetteurs === "mixte";
-    var typePac = d.emetteurs === "plancher" ? "PAC air/eau basse température (35-45 °C)"
-      : hauteTemp ? "PAC air/eau haute température (55-65 °C)" : "PAC air/eau";
-    var ballon = d.ecs ? ((d.nbPersonnes || 0) >= CONFIG.ballonSeuilPersonnes ? CONFIG.ballonLitresGrand : CONFIG.ballonLitres) : 0;
-    var ecsLibelle = d.ecs ? "Module ECS / ballon " + ballon + " L" : "Non (chauffage seul)";
-    var prixTTC = CONFIG.prix[gamme] + (d.ecs ? CONFIG.prixEcs : 0);
+    var typePac = "PAC air/eau moyenne température";
+    var ballon = 0;
+    for (var j = 0; j < CONFIG.ballonSurface.length; j++) if (d.surface <= CONFIG.ballonSurface[j][0]) { ballon = CONFIG.ballonSurface[j][1]; break; }
+    var ecsLibelle = "Ballon électrique " + ballon + " L";
+    var prixTTC = CONFIG.prix[gamme] + CONFIG.prixEcs;
     var alertes = [];
     if (gamme >= CONFIG.seuilTriphaseKw && d.compteur === "mono") alertes.push("Vérifier le passage en triphasé / la puissance du compteur.");
     if (gamme >= CONFIG.seuilTriphaseKw && d.compteur === "nsp") alertes.push("Puissance élevée : le technicien vérifiera votre compteur (monophasé ou triphasé, puissance souscrite).");
-    if (horsGamme) alertes.push("Besoin supérieur à 22 kW : une étude spécifique est nécessaire (isolation préalable ou installation en cascade). Le prix affiché correspond à 22 kW.");
+    if (horsGamme) alertes.push("Grande surface (plus de 250 m²) : une étude spécifique est nécessaire (installation en cascade possible). Le prix affiché correspond à 22 kW.");
     if (d.emetteurs === "mixte") alertes.push("Radiateurs + plancher chauffant : prévoir un kit 2 zones (vanne mélangeuse) pour le plancher.");
 
     return {
       anneeConstruction: d.annee, gBase: gBase, isolation: postes, g: g,
       surface: d.surface, hauteur: d.hauteur, volume: volume, niveaux: d.niveaux,
-      emetteurs: d.emetteurs, ecs: !!d.ecs, nbPersonnes: d.nbPersonnes || null, ballonLitres: ballon || null,
+      emetteurs: d.emetteurs, ecs: true, nbPersonnes: d.nbPersonnes || null, ballonLitres: ballon || null,
       altitude: d.altitude, compteur: d.compteur,
       cp: d.cp, departement: dep, tbaseDepartement: tbaseDep, correctionAltitude: corrAlt, tbase: tbase,
       tInterieure: CONFIG.tInterieure, deltaT: deltaT,
@@ -689,7 +691,7 @@
       hauteTemperature: hauteTemp, typePac: typePac, ecsLibelle: ecsLibelle,
       alerteTriphase: gamme >= CONFIG.seuilTriphaseKw && d.compteur === "mono",
       alertes: alertes, prixTTC: prixTTC,
-      produit: typePac.replace(/ \(.*\)$/, "") + " " + gamme + " kW" + (d.ecs ? " + module ECS / ballon " + ballon + " L" : "")
+      produit: typePac + " " + gamme + " kW + ballon électrique " + ballon + " L"
     };
   }
 
@@ -777,8 +779,8 @@
     var formSim = ctx.formSimulateur;
     var sections = {};
     Array.prototype.forEach.call(form.querySelectorAll("[data-detape]"), function (s) { sections[s.getAttribute("data-detape")] = s; });
-    var QUESTIONS = ["annee", "isolation", "volume", "niveaux", "emetteurs", "ecs", "compteur"];
-    var ORDRE = QUESTIONS.concat(["note", "photos", "fin"]);
+    var QUESTIONS = ["annee", "isolation", "volume", "niveaux", "emetteurs", "compteur"];
+    var ORDRE = QUESTIONS.concat(["note", "fin"]);
     var btnRetour = document.getElementById("dim-retour");
     var btnSuivant = document.getElementById("dim-suivant");
     var nav = document.getElementById("dim-nav");
@@ -801,8 +803,6 @@
     var champSurface = document.getElementById("d-surface");
     champSurface.value = ctx.etat.surface || "";
     var nbP = ctx.etat.personnes;
-    document.getElementById("d-ecs-sous").textContent = "Votre foyer compte " + nbP + " personne" + (nbP > 1 ? "s" : "") +
-      " : la PAC chaufferait un ballon de " + (nbP >= CONFIG.ballonSeuilPersonnes ? CONFIG.ballonLitresGrand : CONFIG.ballonLitres) + " L pour l'eau chaude sanitaire.";
     if (ctx.etat.age === "non") { var r5 = document.getElementById("d-an-5"); if (r5) r5.checked = true; }
 
     function valeurRadio(nom) { var r = form.querySelector('input[name="' + nom + '"]:checked'); return r ? r.value : ""; }
@@ -813,8 +813,8 @@
       courante = nom;
       var iq = QUESTIONS.indexOf(nom);
       var pct, txt;
-      if (iq !== -1) { pct = Math.round(iq / (QUESTIONS.length + 2) * 100); txt = "Question " + (iq + 1) + " sur " + QUESTIONS.length; }
-      else if (nom === "note") { pct = Math.round(QUESTIONS.length / (QUESTIONS.length + 2) * 100); txt = "Votre note et pré-devis"; }
+      if (iq !== -1) { pct = Math.round(iq / (QUESTIONS.length + 1) * 100); txt = "Question " + (iq + 1) + " sur " + QUESTIONS.length; }
+      else if (nom === "note") { pct = Math.round(QUESTIONS.length / (QUESTIONS.length + 1) * 100); txt = "Votre note et pré-devis"; }
       else if (nom === "photos") { pct = Math.round((QUESTIONS.length + 1) / (QUESTIONS.length + 2) * 100); txt = "Photos avant chantier"; }
       else { pct = 100; txt = "Dossier envoyé"; }
       barre.style.width = Math.max(4, pct) + "%";
@@ -824,6 +824,7 @@
       btnSuivant.hidden = (nom === "photos");
       btnSuivant.textContent = sections[nom].getAttribute("data-bouton") || "Continuer";
       if (nom === "compteur") btnSuivant.textContent = "Voir ma note et mon pré-devis";
+      if (nom === "note") btnSuivant.textContent = "Envoyer ma demande de devis";
       zoneErreur.hidden = true;
       var titre = sections[nom].querySelector("legend, h2");
       if (titre) { titre.setAttribute("tabindex", "-1"); titre.focus({ preventScroll: true }); }
@@ -858,7 +859,7 @@
     function calculer() {
       resultat = dimensionner({
         annee: rep.annee, isolation: rep.isolation, surface: rep.surface, hauteur: rep.hauteur, niveaux: rep.niveaux,
-        emetteurs: rep.emetteurs, ecs: rep.ecs === "oui", nbPersonnes: ctx.etat.personnes,
+        emetteurs: rep.emetteurs, ecs: true, nbPersonnes: ctx.etat.personnes,
         altitude: rep.altitude, compteur: rep.compteur, cp: ctx.etat.cp
       });
       aides = calculAides(ctx.couleur, resultat.prixTTC, ctx.mprMontant, ctx.etat.chauffage, { surface: ctx.etat.surface, cp: ctx.etat.cp, habitat: ctx.etat.habitat });
@@ -868,7 +869,6 @@
       var h = '<h2 tabindex="-1">Note de dimensionnement indicative</h2>';
       h += '<p class="sous">Calculée à partir de vos réponses. Un technicien RGE la vérifie avant tout devis définitif.</p>';
       h += '<div class="preco"><div><span>Puissance conseillée</span><strong>' + r.puissanceConseilleeKw + ' kW</strong></div>' +
-           '<div><span>Déperditions estimées</span><strong>' + kw(r.deperditionsKw) + '</strong></div>' +
            '<div><span>Type de PAC</span><strong style="font-size:1.1rem">' + echapper(r.typePac) + '</strong></div>' +
            '<div><span>Eau chaude sanitaire</span><strong style="font-size:1.1rem">' + echapper(r.ecsLibelle) + '</strong></div></div>';
       r.alertes.forEach(function (a) { h += '<div class="alerte alerte-attention"><p class="mb-0">' + echapper(a) + '</p></div>'; });
@@ -881,14 +881,10 @@
       h += ligne("Niveaux", LIB.niveaux[r.niveaux]);
       h += ligne("Émetteurs", LIB.emetteurs[r.emetteurs]);
       h += ligne("Compteur", LIB.compteur[r.compteur]);
-      h += ligne("Coefficient G", nf(r.g) + " W/m³.K");
-      h += ligne("Temp. de base (" + r.departement + ", " + (rep.altitudeM != null ? "altitude " + rep.altitudeM + " m" : LIB.altitude[r.altitude].toLowerCase()) + ")", nf(r.tbase) + " °C");
-      h += ligne("Écart de température", nf(r.deltaT) + " °C");
-      h += ligne("Puissance calculée (+10 %)", kw(r.puissanceCalculeeKw, 2));
-      h += '</dl><p class="mention mt-2 mb-0">Méthode : déperditions = G × volume × (19 °C − température de base), puissance = déperditions × 1,1 arrondie à la gamme supérieure.</p></div></details>';
+      h += '</dl><p class="mention mt-2 mb-0">Méthode : puissance moyenne selon la surface chauffée ; ballon électrique selon la surface (270 L au plus). Le technicien l\'ajuste à la visite selon l\'isolation et les émetteurs.</p></div></details>';
       h += '<h2 class="mt-2" style="font-size:clamp(1.25rem,4vw,1.5rem)">Pré-devis indicatif</h2>';
       h += blocAides(aides, r.prixTTC, r.produit, "Fourniture et pose");
-      h += '<div class="alerte alerte-info"><p class="mb-0"><strong>Devis définitif après validation des photos et visite technique par un technicien RGE.</strong></p></div>';
+      h += '<div class="alerte alerte-info"><p class="mb-0"><strong>Devis définitif après visite technique par un technicien RGE.</strong></p></div>';
       document.getElementById("dim-note").innerHTML = h;
     }
 
@@ -904,6 +900,7 @@
       if (envoiEnCours) return;
       if (!valider(courante)) return;
       if (courante === "compteur") calculer();
+      if (courante === "note") { terminer(true); return; }
       var i = ORDRE.indexOf(courante);
       if (ORDRE[i + 1]) afficher(ORDRE[i + 1]);
     }
@@ -1089,7 +1086,7 @@
           var nb = photos.filter(function (p) { return p.envoyee; }).length;
           document.getElementById("dim-fin-photos").textContent = nb
             ? nb + " photo" + (nb > 1 ? "s" : "") + " reçue" + (nb > 1 ? "s" : "") + " avec votre note de dimensionnement."
-            : "Vous pourrez envoyer vos photos plus tard : votre conseiller vous indiquera comment, ou montrez-les lors de la visite technique.";
+            : "Votre note de dimensionnement est bien reçue.";
           afficher("fin");
           form.scrollIntoView({ block: "start", behavior: "smooth" });
         })
