@@ -538,6 +538,17 @@ html[data-palette="soleil-off"] { --titre: #102a43; --encre: #1c2b39; --encre-2:
 .galerie figure { margin: 0; aspect-ratio: 4 / 5; overflow: hidden; border-radius: 10px; background: var(--gris); max-width: 100%; }
 .galerie img { width: 100%; height: 100%; object-fit: cover; display: block; }
 
+/* ---------- Accueil : vignettes de chantiers réels + marques (17/11) ---------- */
+.ha-photos { display: flex; align-items: center; gap: 8px; margin: 22px 0 0; text-decoration: none; color: var(--encre); }
+.ha-photos img { width: 64px; height: 48px; object-fit: cover; border-radius: 8px; border: 2px solid #fff; box-shadow: var(--ombre); }
+.ha-photos img + img { margin-left: -18px; }
+.ha-photos span { margin-left: 6px; font-size: .9rem; line-height: 1.35; color: var(--encre-2); }
+.ha-photos strong { display: block; color: var(--encre); }
+.ha-photos:hover strong { color: var(--vert); }
+.marques { margin: 6px 0 0; color: var(--encre-2); font-size: .98rem; }
+.marques strong { color: var(--encre); font-weight: 700; }
+@media (max-width: 719px) { .heros-accueil .heros-garanties, .heros-accueil .ha-photos { display: none; } }
+
 /* ---------- Encart officiel France Rénov' (charte 2026 : haut de page, >= 150 px, pleine largeur mobile, cliquable) ---------- */
 .fr-encart { background: #fff; padding: 16px 0; }
 .fr-encart a { display: block; width: fit-content; max-width: 100%; margin: 0 auto; }
