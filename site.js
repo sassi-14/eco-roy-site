@@ -27,18 +27,32 @@
     document.body.appendChild(bm);
   }
 
-  // Créneau de rappel : le visiteur choisit le jour et la plage horaire (lun-ven, 9 h - 19 h)
+  // Créneau de rappel : lundi-vendredi hors jours fériés, 10 h - 13 h et 14 h - 20 h (D. 223-9),
+  // et seulement dans les 5 jours ouvrables qui suivent la demande (R. 223-4)
   var zones = document.querySelectorAll("[data-creneaux]");
   if (zones.length) {
-    var PLAGES = [[9, 11], [11, 13], [14, 16], [16, 18], [18, 19]];
+    var PLAGES = [[10, 12], [12, 13], [14, 16], [16, 18], [18, 20]];
     var JOURS = ["dim.", "lun.", "mar.", "mer.", "jeu.", "ven.", "sam."];
     var MOIS = ["janv.", "févr.", "mars", "avr.", "mai", "juin", "juil.", "août", "sept.", "oct.", "nov.", "déc."];
     var p2 = function (x) { return (x < 10 ? "0" : "") + x; };
+    var feries = function (an) {
+      var a = an % 19, b = Math.floor(an / 100), c = an % 100, dd = Math.floor(b / 4), e = b % 4, f = Math.floor((b + 8) / 25),
+        g = Math.floor((b - f + 1) / 3), h = (19 * a + b - dd - g + 15) % 30, i = Math.floor(c / 4), k = c % 4,
+        l = (32 + 2 * e + 2 * i - h - k) % 7, m = Math.floor((a + 11 * h + 22 * l) / 451),
+        mo = Math.floor((h + l - 7 * m + 114) / 31), jo = ((h + l - 7 * m + 114) % 31) + 1, paques = new Date(an, mo - 1, jo);
+      var plus = function (n) { var x = new Date(paques); x.setDate(x.getDate() + n); return (x.getMonth() + 1) + "-" + x.getDate(); };
+      return ["1-1", "5-1", "5-8", "7-14", "8-15", "11-1", "11-11", "12-25", plus(1), plus(39), plus(50)];
+    };
+    var ferie = function (d) { return feries(d.getFullYear()).indexOf((d.getMonth() + 1) + "-" + d.getDate()) !== -1; };
     var maintenant = new Date();
+    // date limite : 5e jour ouvrable (lundi-samedi hors fériés) après aujourd'hui
+    var limite = new Date(maintenant.getFullYear(), maintenant.getMonth(), maintenant.getDate()), ouvr = 0;
+    while (ouvr < 5) { limite.setDate(limite.getDate() + 1); if (limite.getDay() !== 0 && !ferie(limite)) ouvr++; }
     var jours = [];
-    for (var j = 0; jours.length < 5 && j < 12; j++) {
+    for (var j = 0; j < 10; j++) {
       var d = new Date(maintenant.getFullYear(), maintenant.getMonth(), maintenant.getDate() + j);
-      if (d.getDay() === 0 || d.getDay() === 6) continue;
+      if (d > limite) break;
+      if (d.getDay() === 0 || d.getDay() === 6 || ferie(d)) continue;
       var libres = PLAGES.filter(function (pl) { return new Date(d.getFullYear(), d.getMonth(), d.getDate(), pl[1] - 1, 0) > maintenant; });
       if (libres.length) jours.push({ d: d, plages: libres, nom: j === 0 ? "Aujourd'hui" : j === 1 ? "Demain" : JOURS[d.getDay()] + " " + d.getDate() + " " + MOIS[d.getMonth()] });
     }
@@ -46,7 +60,7 @@
       var choixJour = -1;
       zone.innerHTML = '<span class="etiquette-creneau">Quand souhaitez-vous être rappelé ?</span>' +
         '<div class="creneaux-jours" role="group" aria-label="Jour du rappel"></div><div class="creneaux-heures" role="group" aria-label="Plage horaire"></div>' +
-        '<p class="aide creneau-resume" aria-live="polite">Sans choix de votre part, nous vous rappelons dès que possible (lundi au vendredi, 9 h - 19 h).</p>' +
+        '<p class="aide creneau-resume" aria-live="polite">Sans choix de votre part, nous vous rappelons dès que possible (lundi au vendredi, 10 h - 13 h et 14 h - 20 h).</p>' +
         '<input type="hidden" id="rappel-le"><input type="hidden" id="rappel-libelle">';
       var zj = zone.querySelector(".creneaux-jours"), zh = zone.querySelector(".creneaux-heures"), res = zone.querySelector(".creneau-resume");
       var le = zone.querySelector("#rappel-le"), lib = zone.querySelector("#rappel-libelle");
@@ -54,7 +68,7 @@
       function dessiner(plageChoisie) {
         zj.innerHTML = ""; zh.innerHTML = "";
         var asap = bouton("Dès que possible", choixJour === -1);
-        asap.addEventListener("click", function () { choixJour = -1; le.value = ""; lib.value = ""; res.textContent = "Nous vous rappelons dès que possible (lundi au vendredi, 9 h - 19 h)."; dessiner(); });
+        asap.addEventListener("click", function () { choixJour = -1; le.value = ""; lib.value = ""; res.textContent = "Nous vous rappelons dès que possible (lundi au vendredi, 10 h - 13 h et 14 h - 20 h)."; dessiner(); });
         zj.appendChild(asap);
         jours.forEach(function (jr, i) {
           var b = bouton(jr.nom, choixJour === i);
