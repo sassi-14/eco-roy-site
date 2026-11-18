@@ -537,3 +537,9 @@ html[data-palette="soleil-off"] { --titre: #102a43; --encre: #1c2b39; --encre-2:
 @media (min-width: 760px) { .galerie { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; } }
 .galerie figure { margin: 0; aspect-ratio: 4 / 5; overflow: hidden; border-radius: 10px; background: var(--gris); max-width: 100%; }
 .galerie img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+/* ---------- Encart officiel France Rénov' (charte 2026 : haut de page, ≥ 150 px, pleine largeur mobile, cliquable) ---------- */
+.fr-encart { background: #fff; padding: 16px 0; border-bottom: 1px solid var(--trait); }
+.fr-encart a { display: block; }
+.fr-encart img { display: block; height: 150px; width: auto; max-width: 100%; margin: 0 auto; }
+@media (max-width: 1023px) { .fr-encart .conteneur { padding: 0; } .fr-encart img { width: 100%; height: auto; min-height: 150px; object-fit: contain; } }
