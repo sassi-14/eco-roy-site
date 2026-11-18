@@ -61,7 +61,7 @@
     altitude: { "moins-200": 0, "200-400": -1, "400-800": -3, "plus-800": -4 },
     seuilTriphaseKw: 14,
     // Puissance moyenne selon la surface chauffée (décision de Sassi, 18 nov.) : [surface max m², kW]
-    puissanceSurface: [[60, 6], [85, 8], [115, 11], [130, 12], [155, 14], [180, 16], [Infinity, 22]],
+    puissanceSurface: [[60, 6], [85, 8], [115, 11], [130, 12], [155, 14], [200, 16], [Infinity, 22]],
     // Eau chaude : toujours un ballon électrique, taille selon la surface, 270 L maximum
     ballonSurface: [[80, 150], [120, 200], [Infinity, 270]],
 
@@ -676,6 +676,7 @@
     var alertes = [];
     if (gamme >= CONFIG.seuilTriphaseKw && d.compteur === "mono") alertes.push("Vérifier le passage en triphasé / la puissance du compteur.");
     if (gamme >= CONFIG.seuilTriphaseKw && d.compteur === "nsp") alertes.push("Puissance élevée : le technicien vérifiera votre compteur (monophasé ou triphasé, puissance souscrite).");
+    if (gamme >= 22) alertes.push("PAC 22 kW : raccordement en triphasé obligatoire.");
     if (horsGamme) alertes.push("Grande surface (plus de 250 m²) : une étude spécifique est nécessaire (installation en cascade possible). Le prix affiché correspond à 22 kW.");
     if (d.emetteurs === "mixte") alertes.push("Radiateurs + plancher chauffant : prévoir un kit 2 zones (vanne mélangeuse) pour le plancher.");
 
