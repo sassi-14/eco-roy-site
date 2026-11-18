@@ -135,9 +135,9 @@
 (function () {
   "use strict";
   var TAGS = {
-    google: "",   // ex. "AW-123456789" (Google Ads) ou "G-XXXXXXX" (GA4) — plusieurs séparés par des virgules
-    googleLeadLabel: "", // ex. "AW-123456789/AbCdEfGh" : étiquette de conversion « lead »
-    meta: ""      // ex. "123456789012345" (pixel Meta)
+    google: "AW-18564008765",   // ex. "AW-123456789" (Google Ads) ou "G-XXXXXXX" (GA4) — plusieurs séparés par des virgules
+    googleLeadLabel: "AW-18564008765/4gOUCO78-rodEL2WgZRF", // ex. "AW-123456789/AbCdEfGh" : étiquette de conversion « lead »
+    meta: "1522008669767825"      // ex. "123456789012345" (pixel Meta)
   };
   var actifs = !!(TAGS.google || TAGS.meta);
   window.dataLayer = window.dataLayer || [];
@@ -161,18 +161,14 @@
       window.fbq("init", TAGS.meta); window.fbq("track", "PageView");
     }
   }
-  // Conversion « lead » : déclenchée par l'événement lead_submitted déjà poussé par les formulaires
-  var pushOrig = window.dataLayer.push;
-  window.dataLayer.push = function () {
-    for (var i = 0; i < arguments.length; i++) {
-      var ev = arguments[i];
-      if (ev && ev.event === "lead_submitted" && lire() === "oui") {
-        if (TAGS.googleLeadLabel) gtag("event", "conversion", { send_to: TAGS.googleLeadLabel });
-        if (TAGS.google) gtag("event", "generate_lead", { lead_source: ev.lead_source || "" });
-        if (TAGS.meta && window.fbq) window.fbq("track", "Lead");
-      }
-    }
-    return pushOrig.apply(window.dataLayer, arguments);
+  // Conversion « lead » : appelée par simulateur.js (window.EcoRoy.lead) au moment où une demande part au CRM.
+  // On n'intercepte plus dataLayer.push : gtag.js le remplace une fois chargé, ce qui coupait le comptage.
+  window.EcoRoy = window.EcoRoy || {};
+  window.EcoRoy.lead = function (ev) {
+    if (lire() !== "oui") return;
+    if (TAGS.googleLeadLabel) gtag("event", "conversion", { send_to: TAGS.googleLeadLabel });
+    if (TAGS.google) gtag("event", "generate_lead", { lead_source: (ev && ev.lead_source) || "" });
+    if (TAGS.meta && window.fbq) window.fbq("track", "Lead");
   };
   function bandeau() {
     if (!actifs || document.getElementById("bandeau-cookies")) return;

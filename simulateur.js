@@ -124,6 +124,7 @@
   function pousserDataLayer(donnees) {
     window.dataLayer = window.dataLayer || [];
     window.dataLayer.push(donnees);
+    if (donnees && donnees.event === "lead_submitted" && window.EcoRoy && window.EcoRoy.lead) window.EcoRoy.lead(donnees);
   }
 
   /** POST vers le CRM. Résout avec la réponse JSON, rejette avec {type:"reseau"|"serveur", message} */
