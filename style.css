@@ -549,8 +549,8 @@ html[data-palette="soleil-off"] { --titre: #102a43; --encre: #1c2b39; --encre-2:
 .marques strong { color: var(--encre); font-weight: 700; }
 @media (max-width: 719px) { .heros-accueil .heros-garanties, .heros-accueil .ha-photos { display: none; } }
 
-/* ---------- Encart officiel France Rénov' (charte 2026 : haut de page, ≥ 150 px, pleine largeur mobile, cliquable) ---------- */
-.fr-encart { background: #fff; padding: 16px 0; border-bottom: 1px solid var(--trait); }
-.fr-encart a { display: block; }
-.fr-encart img { display: block; height: 150px; width: auto; max-width: 100%; margin: 0 auto; }
-@media (max-width: 1023px) { .fr-encart .conteneur { padding: 0; } .fr-encart img { width: 100%; height: auto; min-height: 150px; object-fit: contain; } }
+/* ---------- Encart officiel France Rénov' (charte 2026 : haut de page, >= 150 px, pleine largeur mobile, cliquable) ---------- */
+.fr-encart { background: #fff; padding: 16px 0; }
+.fr-encart a { display: block; width: fit-content; max-width: 100%; margin: 0 auto; }
+.fr-encart img { display: block; height: 180px; width: auto; max-width: 100%; object-fit: contain; }
+@media (max-width: 1023px) { .fr-encart { padding: 12px 0; } .fr-encart .conteneur { padding: 0 12px; } .fr-encart a { width: 100%; } .fr-encart img { width: 100%; height: auto; min-height: 150px; } }
