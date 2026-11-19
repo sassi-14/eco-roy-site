@@ -1127,12 +1127,14 @@
       e.preventDefault();
       var g = function (id) { return document.getElementById(id); };
       var ok = true;
+      var v = function (id) { var x = g(id); return x ? x.value.trim() : ""; };
       [["c-nom", "Indiquez votre nom."], ["c-prenom", "Indiquez votre prénom."]].forEach(function (c) {
+        if (!g(c[0])) return; // formulaire court de l'accueil : pas de champ prénom
         if (!marquerErreur(g(c[0]), g(c[0]).value.trim().length < 2 ? c[1] : "")) ok = false;
       });
       if (!marquerErreur(g("c-tel"), RE_TEL.test(g("c-tel").value.trim()) ? "" : "Numéro invalide (ex. : 06 12 34 56 78).")) ok = false;
-      var em = g("c-email").value.trim();
-      if (!marquerErreur(g("c-email"), (!em || RE_EMAIL.test(em)) ? "" : "Adresse e-mail invalide.")) ok = false;
+      var em = v("c-email");
+      if (g("c-email") && !marquerErreur(g("c-email"), (!em || RE_EMAIL.test(em)) ? "" : "Adresse e-mail invalide.")) ok = false;
       if (!marquerErreur(g("c-cp"), /^\d{5}$/.test(g("c-cp").value.trim()) ? "" : "Le code postal doit comporter 5 chiffres.")) ok = false;
       g("c-consentement-erreur").textContent = g("c-consentement").checked ? "" : "Votre accord est nécessaire pour que nous puissions vous recontacter.";
       if (!g("c-consentement").checked) ok = false;
@@ -1145,16 +1147,16 @@
         action: "lead", source: "Site internet",
         consentement: texteAccord("c-consentement"), page: location.pathname,
         rappelLe: (document.getElementById("rappel-le") || {}).value || "", creneau: (document.getElementById("rappel-libelle") || {}).value || "",
-        nom: g("c-nom").value.trim(), prenom: g("c-prenom").value.trim(),
+        nom: v("c-nom"), prenom: v("c-prenom"),
         tel: telNormalise(g("c-tel").value.trim()), email: em,
         adresse: "", cp: g("c-cp").value.trim(), ville: "",
         habitat: "", proprietaire: "", chauffage: "", surface: "", anneeConstruction: "",
-        nbPersonnes: "", rfr: "", produit: g("c-projet").value,
-        message: "[Formulaire de contact] Projet : " + g("c-projet").value + "\n" + g("c-message").value.trim(),
-        utm: utm(), website: g("c-website").value
+        nbPersonnes: "", rfr: "", produit: v("c-projet") || "PAC air/eau",
+        message: (g("c-prenom") ? "[Formulaire de contact]" : "[Rappel rapide accueil]") + " Projet : " + (v("c-projet") || "PAC air/eau") + (v("c-message") ? "\n" + v("c-message") : ""),
+        utm: utm(), website: v("c-website")
       };
       envoyerAuCrm(payload).then(function () {
-        pousserDataLayer({ event: "lead_submitted", lead_source: "contact", lead_produit: payload.produit, lead_departement: payload.cp.slice(0, 2) });
+        pousserDataLayer({ event: "lead_submitted", lead_source: g("c-prenom") ? "contact" : "rappel-accueil", lead_produit: payload.produit, lead_departement: payload.cp.slice(0, 2) });
         rappel.reset();
         retour.className = "alerte alerte-info";
         retour.innerHTML = "<p class=\"mb-0\"><strong>Merci, votre demande est bien enregistrée.</strong> Un conseiller vous rappelle au créneau choisi, ou dès que possible.</p>";
