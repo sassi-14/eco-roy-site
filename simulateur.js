@@ -133,7 +133,7 @@
   /** POST vers le CRM. Résout avec la réponse JSON, rejette avec {type:"reseau"|"serveur", message} */
   function envoyerAuCrm(payload, delaiMs) {
     var ctrl = ("AbortController" in window) ? new AbortController() : null;
-    var minuteur = ctrl ? setTimeout(function () { ctrl.abort(); }, delaiMs || 20000) : null;
+    var minuteur = ctrl ? setTimeout(function () { ctrl.abort(); }, delaiMs || 60000) : null;
     return fetch(CRM_URL, {
       method: "POST",
       headers: { "Content-Type": "text/plain;charset=utf-8" },
@@ -464,6 +464,7 @@
       zoneErreur.hidden = true;
       btnSuivant.disabled = true;
       btnSuivant.textContent = "Envoi en cours…";
+      var lent1 = setTimeout(function () { btnSuivant.textContent = "Encore quelques secondes…"; }, 8000);
       var payload = construirePayload();
       envoyerAuCrm(payload).then(function (rep) {
         var local = calculLocal();
@@ -483,6 +484,7 @@
         zoneErreur.hidden = false;
         zoneErreur.focus();
       }).then(function () {
+        clearTimeout(lent1);
         envoiEnCours = false;
         btnSuivant.disabled = false;
         if (courante === "coordonnees") btnSuivant.textContent = "Réessayer l'envoi";
@@ -1055,7 +1057,7 @@
       payload.preDevis = preDevis();
       payload.utm = utm();
       var essai = function (k) {
-        return envoyerAuCrm(payload, 20000).catch(function (err) {
+        return envoyerAuCrm(payload, 60000).catch(function (err) {
           if (k >= 2) throw err;
           return attendre(k === 0 ? 1000 : 3000).then(function () { return essai(k + 1); });
         });
@@ -1143,6 +1145,7 @@
       var bouton = rappel.querySelector('button[type="submit"]');
       var retour = g("c-retour");
       bouton.disabled = true; bouton.textContent = "Envoi en cours…";
+      var lent2 = setTimeout(function () { bouton.textContent = "Encore quelques secondes…"; }, 8000);
       var payload = {
         action: "lead", source: "Site internet",
         consentement: texteAccord("c-consentement"), page: location.pathname,
@@ -1165,7 +1168,7 @@
         retour.innerHTML = '<p class="mb-0"><strong>L\'envoi a échoué.</strong> Réessayez dans un instant ou appelez-nous au <a href="tel:+33972149162">' + TEL_AFFICHE + '</a>.</p>';
       }).then(function () {
         retour.hidden = false; retour.focus();
-        bouton.disabled = false; bouton.textContent = "Être rappelé";
+        clearTimeout(lent2); bouton.disabled = false; bouton.textContent = "Être rappelé";
       });
     });
   }
