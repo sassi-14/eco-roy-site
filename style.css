@@ -277,6 +277,8 @@ a.carte:hover h3 { color: var(--vert); }
 .encadre p:last-child { margin-bottom: 0; }
 .encadre-vert { background: var(--vert-pale); border-left-color: var(--vert); }
 .mention { font-size: .86rem; color: var(--encre-2); line-height: 1.55; }
+.mention-credit { font-size: 1.35rem; font-weight: 800; line-height: 1.35; color: var(--encre); margin: 14px 0; }
+.titre-alma { font-size: 1.15rem; }
 
 /* Réassurance */
 .reassurance { display: grid; gap: 14px; grid-template-columns: minmax(0, 1fr); }
