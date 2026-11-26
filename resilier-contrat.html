@@ -53,8 +53,26 @@
 <div class="champ"><label for="r-email">E-mail pour recevoir la confirmation</label><input type="email" id="r-email" name="email" autocomplete="email" required></div>
 <div class="champ"><label for="r-contrat">Numéro de contrat ou formule <span class="mention">(si vous l'avez)</span></label><input type="text" id="r-contrat" name="contrat"></div>
 <div class="champ"><label for="r-motif">Motif <span class="mention">(facultatif)</span></label><select id="r-motif" name="motif"><option value="">Je ne précise pas</option><option>Vente du logement ou déménagement</option><option>Remplacement, dépose ou mise hors service de l'appareil</option><option>Décès du titulaire</option><option>Manquement de notre part resté sans effet 30 jours après une réclamation écrite</option><option>Autre motif</option></select></div>
-<button class="btn btn-principal" type="submit">Résilier votre contrat</button>
+<p class="mention" id="r-justif">Si vous indiquez un motif de la liste, joignez votre justificatif par e-mail à <a href="mailto:contact@roy-consulting.com">contact@roy-consulting.com</a> ou par courrier.</p>
+<div class="champ"><label for="r-date">Date de résiliation souhaitée <span class="mention">(facultatif, sous réserve du préavis d'un mois)</span></label><input type="date" id="r-date" name="dateSouhaitee"></div>
+<button class="btn btn-principal" type="submit" id="r-verifier">Vérifier ma demande</button>
+<div id="r-recap" hidden>
+<h2 style="font-size:1.2rem">Vérifiez votre demande</h2>
+<dl id="r-recap-liste"></dl>
+<p><strong>Rappel :</strong> préavis d'un mois ; pendant les 12 premiers mois, le reste de l'année reste dû si la visite ou un dépannage a déjà eu lieu (article 12).</p>
+<p><button class="btn btn-contour" type="button" id="r-modifier">Modifier</button> <button class="btn btn-principal" type="button" id="r-notifier">Notifier la résiliation</button></p>
+</div>
 </form>
+<script>
+/* PROJET : récapitulatif avant envoi (D. 215-2). L'envoi réel n'est PAS branché (canal à choisir par CRM / Outils). */
+(function(){var f=document.getElementById('form-resiliation'),r=document.getElementById('r-recap'),l=document.getElementById('r-recap-liste'),v=document.getElementById('r-verifier');
+var champs=[['r-nom','Titulaire'],['r-adresse','Adresse du logement'],['r-cp','Code postal'],['r-email','E-mail'],['r-contrat','Contrat ou formule'],['r-motif','Motif'],['r-date','Date souhaitée']];
+f.addEventListener('submit',function(e){e.preventDefault();if(!f.checkValidity()){f.reportValidity();return;}l.textContent='';
+champs.forEach(function(c){var x=document.getElementById(c[0]).value||'non précisé',dt=document.createElement('dt'),dd=document.createElement('dd');dt.textContent=c[1];dd.textContent=x;l.appendChild(dt);l.appendChild(dd);});
+f.querySelectorAll('.champ').forEach(function(d){d.hidden=true;});document.getElementById('r-justif').hidden=true;v.hidden=true;r.hidden=false;r.querySelector('h2').setAttribute('tabindex','-1');r.querySelector('h2').focus();});
+document.getElementById('r-modifier').addEventListener('click',function(){f.querySelectorAll('.champ').forEach(function(d){d.hidden=false;});document.getElementById('r-justif').hidden=false;v.hidden=false;r.hidden=true;});
+document.getElementById('r-notifier').addEventListener('click',function(){alert('Projet : envoi non branché.');});})();
+</script>
 <p class="mention">Nous vous confirmons par écrit la réception de votre demande et la date de fin de votre contrat.</p>
 </div></section>
 
